@@ -75,6 +75,8 @@ Ainda vou adicionar:
 - Semgrep como step de SAST
 - Um step que manda o diff do PR pra um LLM (Groq + Llama 3) e comenta automaticamente se achar algo suspeito
 
+Deploy automatico configurado
+
 ## Licença
 
 MIT
