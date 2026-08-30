@@ -2,92 +2,79 @@
 
 [![CI/CD Pipeline](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml/badge.svg)](https://github.com/YOUR_USERNAME/YOUR_REPO/actions/workflows/ci.yml)
 
-A minimal FastAPI service used to demonstrate a complete CI/CD pipeline: automated build, automated tests, and automated deploy on every push to `main`. This is the anchor project of a broader DevSecOps portfolio — future projects will integrate with this pipeline.
+Projeto 1 da Pós em Cloud Computing (módulo de Cultura DevOps e Integração Contínua). API bem simples em FastAPI, só pra ter algo real pra rodar pelo pipeline. O que importa aqui é o `.github/workflows/ci.yml`: toda vez que dou push, ele builda, testa e faz o deploy sozinho.
 
 ## Stack
 
-- **API:** Python + FastAPI
-- **CI/CD:** GitHub Actions
-- **Containerization:** Docker
-- **Deploy target:** Railway or Render (see [.github/workflows/ci.yml](.github/workflows/ci.yml))
+- Python + FastAPI
+- GitHub Actions
+- Docker
+- Deploy: Render
 
-## Project structure
+## Estrutura
 
 ```
 .
 ├── app/
 │   ├── __init__.py
-│   └── main.py            # FastAPI application
+│   └── main.py            # a API
 ├── tests/
-│   └── test_main.py       # Automated tests (pytest)
+│   └── test_main.py       # testes com pytest
 ├── docs/
 │   └── pipeline-diagram.md
 ├── .github/workflows/
-│   └── ci.yml              # Build, test, deploy pipeline
+│   └── ci.yml              # o pipeline em si
 ├── Dockerfile
 ├── requirements.txt
 └── requirements-dev.txt
 ```
 
-## Running locally
+## Rodando local
 
 ```bash
 python -m venv venv
-source venv/bin/activate   # Windows: venv\Scripts\activate
+source venv/bin/activate
 pip install -r requirements-dev.txt
 uvicorn app.main:app --reload
 ```
 
-The API will be available at `http://localhost:8000`. Interactive docs at `http://localhost:8000/docs`.
+Abre em `http://localhost:8000` (e `/docs` pra ver a documentação automática do Swagger).
 
-## Running with Docker
+## Rodando com Docker
 
 ```bash
 docker build -t pipeline-cicd-demo .
 docker run -p 8000:8000 pipeline-cicd-demo
 ```
 
-## Running tests
+## Testes
 
 ```bash
 pytest -v
 ```
 
-## CI/CD Pipeline
+## Como funciona o pipeline
 
-See [docs/pipeline-diagram.md](docs/pipeline-diagram.md) for the full flow diagram.
+Diagrama completo em [docs/pipeline-diagram.md](docs/pipeline-diagram.md).
 
-Every push and pull request runs:
-1. Dependency install
-2. Lint (`flake8`)
-3. Tests (`pytest`)
-4. Docker image build
+Em resumo:
+1. Todo push ou PR dispara o job `build-and-test`: instala dependências, roda o `flake8` (lint) e o `pytest`, e builda a imagem Docker.
+2. Se tudo passar E o push foi na `main`, roda o job `deploy`, que dispara o deploy hook do Render.
 
-On push to `main`, after all checks pass, the pipeline deploys automatically to Railway or Render.
+### Configurando o deploy no Render
 
-### Setting up deploy
+1. Cria um Web Service no Render, conectado com Docker, apontando pra esse repo.
+2. Nas configurações do serviço, copia a URL do "Deploy Hook".
+3. No GitHub, vai em Settings > Secrets and variables > Actions e cria um secret `RENDER_DEPLOY_HOOK_URL` com essa URL.
 
-Pick one:
+## Próximos passos
 
-**Railway**
-1. Create a project on [Railway](https://railway.app) and link this repo.
-2. Generate a Railway token and add it as a GitHub secret named `RAILWAY_TOKEN`.
-3. Uncomment the "Deploy to Railway" step in `.github/workflows/ci.yml`.
+Ainda vou adicionar:
+- TruffleHog no pre-commit pra travar secret antes de virar commit
+- Autenticação com AWS via OIDC (sem chave fixa)
+- Semgrep como step de SAST
+- Um step que manda o diff do PR pra um LLM (Groq + Llama 3) e comenta automaticamente se achar algo suspeito
 
-**Render**
-1. Create a Web Service on [Render](https://render.com) connected to Docker.
-2. Copy the service's Deploy Hook URL.
-3. Add it as a GitHub secret named `RENDER_DEPLOY_HOOK_URL`.
-4. Uncomment the "Deploy to Render" step in `.github/workflows/ci.yml`.
-
-## Roadmap (next iterations)
-
-- [ ] Pre-commit hook with TruffleHog for secret scanning
-- [ ] OIDC federation for AWS authentication (no static credentials)
-- [ ] Semgrep SAST step
-- [ ] GitGuardian secret scanning
-- [ ] AI-powered PR review step (Groq API + Llama 3) that comments on security issues in the diff
-
-## License
+## Licença
 
 MIT
